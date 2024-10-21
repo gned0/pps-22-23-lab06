@@ -12,7 +12,7 @@ object FunctionsImpl extends Functions:
   override def sum(a: List[Double]): Double = combine(a)
   override def concat(a: Seq[String]): String = combine(a.toList)
   override def max(a: List[Int]): Int = combine(a)
-  def combine[A: Combiner](elems: List[A]): A =
+  private def combine[A: Combiner](elems: List[A]): A =
       elems.foldLeft(summon[Combiner[A]].unit)((a, b) => summon[Combiner[A]].combine(a, b))
 /*
  * 2) To apply DRY principle at the best,
