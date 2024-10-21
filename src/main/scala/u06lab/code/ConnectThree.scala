@@ -33,7 +33,12 @@ object ConnectThree extends App:
   def firstAvailableRow(board: Board, x: Int): Option[Int] =
     Some(board.filter(_.x == x).map(_.y).toSet.size).filter(_ <= bound)
 
-  def placeAnyDisk(board: Board, player: Player): Seq[Board] = ???
+  def placeAnyDisk(board: Board, player: Player): Seq[Board] =
+    for
+      x <- 0 until bound + 1
+      y <- firstAvailableRow(board, x)
+    yield
+      board :+ Disk(x, y, player)
 
   def computeAnyGame(player: Player, moves: Int): LazyList[Game] = ???
 
