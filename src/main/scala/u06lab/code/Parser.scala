@@ -1,10 +1,10 @@
 package u06lab.code
 
 /** Consider the Parser example shown in previous lesson. Analogously to NonEmpty, create a mixin NotTwoConsecutive,
-  * which adds the idea that one cannot parse two consecutive elements which are equal. Use it (as a mixin) to build
-  * class NotTwoConsecutiveParser, used in the testing code at the end. Note we also test that the two mixins can work
-  * together!!
-  */
+ * which adds the idea that one cannot parse two consecutive elements which are equal. Use it (as a mixin) to build
+ * class NotTwoConsecutiveParser, used in the testing code at the end. Note we also test that the two mixins can work
+ * together!!
+ */
 
 abstract class Parser[T]:
   def parse(t: T): Boolean // is the token accepted?
@@ -29,28 +29,25 @@ trait NonEmpty[T] extends Parser[T]:
 class NonEmptyParser(chars: Set[Char]) extends BasicParser(chars) with NonEmpty[Char]
 
 trait NotTwoConsecutive[T] extends Parser[T]:
-  private[this] var condition = true
-  private[this] var previousElement: Option[T] = None
-  abstract override def parse(t: T): Boolean = previousElement match
-    case None => previousElement = Option(t)
-      condition && super.parse(t)
-    case _ => if previousElement.get == t then condition = false
-      previousElement = Some(t)
-      condition && super.parse(t)
+  private[this] var lastParsedElement: Option[T] = None
+  private[this] var condition: Boolean = true
+  abstract override def parse(t: T): Boolean =
+    if lastParsedElement.contains(t) then condition = false
+    lastParsedElement = Some(t)
+    super.parse(t)
   abstract override def end: Boolean = condition && super.end
 
 trait ShorterThanN[T](n: Int) extends Parser[T]:
-  private[this] var counter = 0
-  private[this] var condition = true
+  private[this] var counter: Int = 0
   abstract override def parse(t: T): Boolean =
     counter = counter + 1
-    if(counter > n) condition = false
-    condition && super.parse(t)
-  abstract override def end: Boolean = condition && super.end
+    super.parse(t)
+  abstract override def end: Boolean = counter <= n && super.end
 
 class NotTwoConsecutiveParser(chars: Set[Char]) extends BasicParser(chars) with NotTwoConsecutive[Char]
 
 @main def checkParsers(): Unit =
+  println("Checking basic parser")
   def parser = new BasicParser(Set('a', 'b', 'c'))
   println(parser.parseAll("aabc".toList)) // true
   println(parser.parseAll("aabcdc".toList)) // false
@@ -58,16 +55,19 @@ class NotTwoConsecutiveParser(chars: Set[Char]) extends BasicParser(chars) with 
 
   // Note NonEmpty being "stacked" on to a concrete class
   // Bottom-up decorations: NonEmptyParser -> NonEmpty -> BasicParser -> Parser
+  println("Checking ParserNE")
   def parserNE = new NonEmptyParser(Set('0', '1'))
   println(parserNE.parseAll("0101".toList)) // true
   println(parserNE.parseAll("0123".toList)) // false
   println(parserNE.parseAll(List())) // false
 
+  println("Checking ParserNTC")
   def parserNTC = new NotTwoConsecutiveParser(Set('X', 'Y', 'Z'))
   println(parserNTC.parseAll("XYZ".toList)) // true
   println(parserNTC.parseAll("XYYZ".toList)) // false
   println(parserNTC.parseAll("".toList)) // true
 
+  println("Checking ParserNTCNE")
   // note we do not need a class name here, we use the structural type
   def parserNTCNE = new BasicParser(Set('X', 'Y', 'Z')) with NotTwoConsecutive[Char] with NonEmpty[Char]
   println(parserNTCNE.parseAll("XYZ".toList)) // true
@@ -76,11 +76,13 @@ class NotTwoConsecutiveParser(chars: Set[Char]) extends BasicParser(chars) with 
 
   import Parsers.*
 
+  println("Checking parser from string")
   def sparser: Parser[Char] = "abc".charParser
   println(sparser.parseAll("aabc".toList)) // true
   println(sparser.parseAll("aabcdc".toList)) // false
   println(sparser.parseAll("".toList)) // true
 
+  println("Checking ParserSTN")
   def parserSTN = new BasicParser(Set('X', 'Y', 'Z')) with ShorterThanN[Char](3)
   println(parserSTN.parseAll("XYZ".toList)) // true
   println(parserSTN.parseAll("XYYZ".toList)) // false
