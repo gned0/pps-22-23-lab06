@@ -40,7 +40,14 @@ object ConnectThree extends App:
     yield
       board :+ Disk(x, y, player)
 
-  def computeAnyGame(player: Player, moves: Int): LazyList[Game] = ???
+  def computeAnyGame(player: Player, moves: Int): LazyList[Game] = moves match
+    case 1 => 0 until 4 map { i => Seq(Seq(Disk(i, 0, player))) } to LazyList
+    case _ =>
+      for
+        game <- computeAnyGame(player.other, moves - 1)
+        newBoard <- placeAnyDisk(game.head, player)
+      yield
+        newBoard +: game
 
   def printBoards(game: Seq[Board]): Unit =
     for
