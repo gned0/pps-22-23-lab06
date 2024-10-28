@@ -17,7 +17,7 @@ object Solitaire extends App:
   // println("Number of found solutions (expected 13272): " + solutions.size)
 
 type Position = (Int, Int)
-type Solution = Seq[Position] // preferring more abstract DS
+type Solution = Seq[Position]
 
 def placeMarks(width: Int, height: Int): Iterable[Solution] =
   def placeMarks(n: Int): Iterable[Solution] = n match
